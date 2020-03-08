@@ -2,7 +2,7 @@
 # @Date:   29-Feb-2020
 # @Email:  Wenlin88@users.noreply.github.com
 # @Last modified by:   Wenlin88
-# @Last modified time: 29-Feb-2020
+# @Last modified time: 07-Mar-2020
 
 from setuptools import setup, find_packages
 
@@ -16,6 +16,7 @@ setup(name='pi_ble_reader',
       packages=find_packages(),
       install_requires=["ruuvitag_sensor>=0.13.0",
       "paho-mqtt>=1.5.0",
-      "influxdb>=5.2.3"],
+      "influxdb>=5.2.3",
+      "python-crontab>=2.4.0"],
       classifiers=['Programming Language :: Python :: 3'],
       zip_safe=False)
