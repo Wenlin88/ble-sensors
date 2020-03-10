@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # Pi_BLE_Reader config file
-.config
+*.config
