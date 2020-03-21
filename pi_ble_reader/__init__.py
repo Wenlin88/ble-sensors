@@ -1,8 +1,8 @@
 # @Author: Wenlin88
 # @Date:   29-Feb-2020
 # @Email:  Wenlin88@users.noreply.github.com
-# @Last modified by:   Wenlin88
-# @Last modified time: 15-Mar-2020
+# @Last modified by:   Henri Wenlin
+# @Last modified time: 2020-03-21T15:14:07+02:00
 
 import sys
 import os
@@ -22,7 +22,7 @@ exception = logger.exception
 
 config_file = "pi_ble_reader.config"
 
-def cread_config_file():
+def read_config_file():
     file = pathlib.Path(config_file)
     if not file.exists ():
         info('Config file not found greating a new one!')
