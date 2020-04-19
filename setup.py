@@ -6,7 +6,7 @@
 
 from setuptools import setup, find_packages
 
-setup(name='pi_ble_reader',
+setup(name='ble_sensors',
       version='0.0.1',
       description='Python module to read all sorts of BLE sensors with Raspberry Pi',
       url='https://github.com/Wenlin88/Pi_BLE_Reader',
@@ -16,6 +16,7 @@ setup(name='pi_ble_reader',
       packages=find_packages(),
       install_requires=["ruuvitag_sensor>=0.13.0",
       "paho-mqtt>=1.5.0",
+      "pyzmq>=19.0.0",
       "influxdb>=5.2.3",
       "python-crontab>=2.4.0"],
       classifiers=['Programming Language :: Python :: 3'],
