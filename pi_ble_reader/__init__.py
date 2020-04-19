@@ -2,7 +2,7 @@
 # @Date:   29-Feb-2020
 # @Email:  Wenlin88@users.noreply.github.com
 # @Last modified by:   Henri Wenlin
-# @Last modified time: 2020-03-21T15:14:07+02:00
+# @Last modified time: 2020-03-21T15:18:14+02:00
 
 import sys
 import os
@@ -30,50 +30,14 @@ def read_config_file():
     with open(config_file) as f:
         lines = f.readlines()
         for row, line in enumerate(lines):
-            if 'find_ruuvitags_at_start' in line:
-                find_ruuvitags_at_start = bool(distutils.util.strtobool(line.split(' = ')[1][:-1]))
-                info('Find ruuvitags at first start enabled: {}'.format(find_ruuvitags_at_start))
-            elif 'ruuvitags_enabled' in line:
-                ruuvitags_enabled = bool(distutils.util.strtobool(line.split(' = ')[1][:-1]))
-                info('Ruuvitags enabled: {}'.format(ruuvitags_enabled))
-            elif 'ruuvitag_scan_interval' in line:
-                ruuvitag_scan_interval = int(line.split(' = ')[1][:-1])
-                info('Ruuvitag scan interval in minutes: {}'.format(ruuvitag_scan_interval))
-            elif 'Known ruuvitags:' in line:
-                i = 1
-                info('Known ruuvitags: ')
-                while not lines[row+i] == '\n':
-                    info(lines[row+i][:-1])
-                    i += 1
-                info(str(i-1) + ' known ruuvitags in total')
-            elif 'indluxdb_enabled' in line:
-                indluxdb_enabled = bool(distutils.util.strtobool(line.split(' = ')[1][:-1]))
-                info('IndluxDB enabled: {}'.format(indluxdb_enabled))
-            elif 'influx_address' in line:
-                influx_address = line.split(' = ')[1][:-1]
-                info('IndluxDB server ip adress: {}'.format(influx_address))
-            elif 'influx_port' in line:
-                influx_port = line.split(' = ')[1][:-1]
-                info('IndluxDB port: {}'.format(influx_port))
-            elif 'influx_database' in line:
-                influx_database = line.split(' = ')[1][:-1]
-                info('IndluxDB database: {}'.format(influx_database))
-            elif 'influx_username' in line:
-                influx_username = line.split(' = ')[1][:-1]
-                info('IndluxDB username: {}'.format(influx_username))
-            elif 'influx_password' in line:
-                influx_password = line.split(' = ')[1][:-1]
-                info('IndluxDB password: {}'.format(influx_password))
+            if 'Account name' in line:
+                account_name = line.split(' = ')[1][:-1])
+                debug('Used account name is: {}'.format(account_name))
 
-    reader_setup = dict()
-    reader_setup['find_ruuvitags_at_start'] = find_ruuvitags_at_start
-    reader_setup['ruuvitags_enabled']       = ruuvitags_enabled
-    reader_setup['influx_address']          = influx_address
-    reader_setup['influx_port']             = influx_port
-    reader_setup['influx_database']         = influx_database
-    reader_setup['influx_username']         = influx_username
-    reader_setup['influx_password']         = influx_password
-    return reader_setup
+
+    config = dict()
+    config['account_name'] = account_name
+
 def create_config_file():
     with open("pi_ble_reader.config", "w") as f:
         f.write("##\t{:^24s}\t##\n".format('--- Ruuvitags ---'))
