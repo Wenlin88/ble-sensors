@@ -12,22 +12,6 @@ from influxdb import InfluxDBClient
 import os
 
 
-# MQTT muuttujat
-ha_address="192.168.10.48"
-client = mqtt.Client("PI4")
-client.username_pw_set(username="ruuvitag",password="mqtt")
-
-#influxDB alustus ruuvitageja vartendfvg
-client = InfluxDBClient(host=ha_address, port=8086, database='ruuvi',username='ruuvi', password='tag')
-
-class reader(object):
-    """ --- docstring for reader ---
-    This class is used to manage ruuvitag reader configuration and tasks to read
-    ruuvitags through """
-
-    def __init__(self):
-        super(reader, self).__init__()
-
 
 
 
@@ -37,10 +21,9 @@ def find_ruuvitags():
     # Tällä funkkarilla voi etsiä tarvittavat
     ruuvitag_sensor.log.enable_console()
     RuuviTagSensor.find_ruuvitags()
-def get_data_from_ruuvitags():
+def get_data(ruuvitags = '', timeout = 5):
     # Tällä funktiolla voi hakea useammasta ruuvitagista datan samalla kertaa
-    timeout_in_sec = 5
-    data = RuuviTagSensor.get_data_for_sensors(ruuvitags, timeout_in_sec)
+    data = RuuviTagSensor.get_data_for_sensors(ruuvitags, timeout)
     return data
 def write_to_influxdb(received_data):
     """
@@ -105,13 +88,24 @@ def puplish_single_example():
 def handle_data(found_data):
     print('MAC ' + found_data[0])
     print(found_data[1])
+def old_stuff():
+    # # TODO: ENNEN kun julkaiset tätä niin muista vaihtaa nämä salasanat HA:sta!. DONE!
+    # MQTT muuttujat
+    ha_address="192.168.10.48"
+    client = mqtt.Client("PI4")
+    client.username_pw_set(username='*****',password='*****')
+
+    #influxDB alustus ruuvitageja vartendfvg
+    client = InfluxDBClient(host=ha_address, port=8086, database='ruuvi',username='*****', password='*****')
+
+    class reader(object):
+        """ --- docstring for reader ---
+        This class is used to manage ruuvitag reader configuration and tasks to read
+        ruuvitags through """
+
+        def __init__(self):
+            super(reader, self).__init__()
 
 
 if __name__ == '__main__':
-    print('Moi!')
-
-import sys
-print("Python version")
-print (sys.version)
-print("Version info.")
-print (sys.version_info)
+    pass
