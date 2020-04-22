@@ -5,6 +5,6 @@ Download the package as a zip or if you are using git. git clone https://github.
 
 ## Instal python package
 
-sh´´´
+´´´sh
 pip install git+https://github.com/Wenlin88/ble-sensors
 ´´´
