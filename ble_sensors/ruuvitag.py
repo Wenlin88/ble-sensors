@@ -25,40 +25,6 @@ def get_data(ruuvitags = '', timeout = 5):
     # Tällä funktiolla voi hakea useammasta ruuvitagista datan samalla kertaa
     data = RuuviTagSensor.get_data_for_sensors(ruuvitags, timeout)
     return data
-def write_to_influxdb(received_data):
-    """
-    Convert data into RuuviCollector naming schme and scale
-    returns:
-        Object to be written to InfluxDB
-    """
-    mac = received_data[0]
-    payload = received_data[1]
-
-    dataFormat = payload['data_format'] if ('data_format' in payload) else None
-    fields = {}
-    fields['temperature']               = payload['temperature'] if ('temperature' in payload) else None
-    fields['humidity']                  = payload['humidity'] if ('humidity' in payload) else None
-    fields['pressure']                  = payload['pressure'] if ('pressure' in payload) else None
-    fields['accelerationX']             = payload['acceleration_x'] if ('acceleration_x' in payload) else None
-    fields['accelerationY']             = payload['acceleration_y'] if ('acceleration_y' in payload) else None
-    fields['accelerationZ']             = payload['acceleration_z'] if ('acceleration_z' in payload) else None
-    fields['batteryVoltage']            = payload['battery']/1000.0 if ('battery' in payload) else None
-    fields['txPower']                   = payload['tx_power'] if ('tx_power' in payload) else None
-    fields['movementCounter']           = payload['movement_counter'] if ('movement_counter' in payload) else None
-    fields['measurementSequenceNumber'] = payload['measurement_sequence_number'] if ('measurement_sequence_number' in payload) else None
-    fields['tagID']                     = payload['tagID'] if ('tagID' in payload) else None
-    fields['rssi']                      = payload['rssi'] if ('rssi' in payload) else None
-    json_body = [
-        {
-            'measurement': 'ruuvi_measurements',
-            'tags': {
-                'mac': mac,
-                'dataFormat': dataFormat
-            },
-            'fields': fields
-        }
-    ]
-    client.write_points(json_body)
 def fetch_data_and_send(listening_time = 10):
     print('Fetching data...')
     data = RuuviTagSensor.get_data_for_sensors(search_duratio_sec = listening_time)
@@ -72,8 +38,8 @@ def fetch_data_and_send(listening_time = 10):
 def puplish_single_example():
     #Tämän tein vain esimerkiksi. En raskinut kuitenkaan poistaa, jos tarvitsee käyttää single rakennetta jatkossa
     auth = {
-      'username':"mqtt",
-      'password':"ruuvitag"
+      'username':"*******",
+      'password':"*******"
     }
 
 

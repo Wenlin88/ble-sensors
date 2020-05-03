@@ -7,7 +7,7 @@ import configparser
 config_file = "ble-sensors.config"
 
 # Init logger
-logger =  wenlins_logger.loggerClass(name = 'ble-sensors config', file_logging = False, logging_level = 'debug')
+logger =  wenlins_logger.loggerClass(name = 'config', file_logging = False, logging_level = 'debug')
 debug = logger.debug
 info = logger.info
 warning = logger.warning
@@ -29,12 +29,12 @@ def create_config_file():
 
 
     config.add_section('InfluxDB')
-    config.set('InfluxDB','InfluxDB enabled','True')
-    config.set('InfluxDB','InfluxDB address','127.0.0.1')
-    config.set('InfluxDB','InfluxDB port','8086')
-    config.set('InfluxDB','InfluxDB database','')
-    config.set('InfluxDB','InfluxDB username','')
-    config.set('InfluxDB','InfluxDB password','')
+    config.set('InfluxDB','enabled','False')
+    config.set('InfluxDB','address','127.0.0.1')
+    config.set('InfluxDB','port','8086')
+    config.set('InfluxDB','database','')
+    config.set('InfluxDB','username','')
+    config.set('InfluxDB','password','')
     config.write(cfgfile)
     cfgfile.close()
     debug('config file done!!')

@@ -1,9 +1,11 @@
 import sys
 import argparse
 import pkg_resources  # part of setuptools
-from ble_sensors import ble_sensor_config, wenlins_logger, ruuvitag
+from ble_sensors import ble_sensor_config, wenlins_logger, ruuvitag, influxDB
 import importlib
 import configparser
+import subprocess
+
 
 config_file = "ble-sensors.config"
 
@@ -22,11 +24,14 @@ def get_parser():
     Creates a new argument parser.
     """
     version = pkg_resources.require("ble_sensors")[0].version
-    formatter = lambda prog: argparse.HelpFormatter(prog,max_help_position=60,width = 115)
+    formatter = lambda prog: argparse.HelpFormatter(prog,max_help_position=62,width = 115)
     parser = argparse.ArgumentParser('ble_sensors',description='Python module to read all sorts of BLE sensors with Raspberry Pi', formatter_class=formatter)
     version = '%(prog)s ' + version
     parser.add_argument('-v', '--version', action='version', version=version, help='get ble-sensors module version')
     parser.add_argument('-f', '--find_tags', dest = 'find_action', help='Find broadcasting RuuviTags', action = 'store_true')
+    parser.add_argument('-r', '--run_tag_scan', dest = 'scan_time', help='Scan data from known RuuviTags.', nargs='?', const=2, type=int)
+    parser.add_argument('-e', '--edit_config', dest = 'config_edit_action', help='Edit config file with Nano editor', action = 'store_true')
+    parser.add_argument('-c', '--continous_scan', default=[60,3], nargs='*', metavar=('interval', 'scan_time'),type=int, help='Continous RuuviTag scanning and reading. Input arguments are measurement interval (default: 60s) and scan time for tag broadcasts (default: 3s)')
     return parser
 def find_ruuvitags(config):
     number_of_known_ruuvitags = int(config['Ruuvitag general']['known ruuvitags'])
@@ -59,6 +64,23 @@ def find_ruuvitags(config):
         ans = input("Add new tags to config? (y/n): ")
         if ans == 'y':
             ble_sensor_config.add_new_ruuvitag_to_config_file(new_macs)
+def read_data_from_ruuvitags(config, timeout = 2, influxDB_client = None):
+    tag_list = ble_sensor_config.read_known_ruuvitags()
+    known_macs = [tag_list[tag]['mac'] for tag in tag_list]
+    data_array = ruuvitag.get_data(timeout = timeout, ruuvitags = known_macs)
+    if len(data_array) > 0:
+        for mac in data_array:
+            tag = [tag for tag in tag_list if tag_list[tag]['mac'] == mac]
+            data = [mac]
+            data.append(data_array[mac])
+            if tag:
+                data.append(tag[0][:])
+            else:
+                warning('Unknown tag: {}'.format(mac))
+            if not influxDB_client == None:
+                influxDB.write_ruuvidata_to_influxdb(influxDB_client,data)
+    else:
+        warning('No data resieved from ruuvitags!')
 def main(args = None):
     print('\n----------------------------------------------- ')
     print('-------- Welcome to ble_sensors CLI UI -------- ')
@@ -68,11 +90,30 @@ def main(args = None):
     # ble_sensor_config.create_config_file()
     config = ble_sensor_config.get_config()
 
+    if config['InfluxDB'].getboolean('enabled') == True:
+        info('InfluxDB enabled!')
+        host = config['InfluxDB']['address']
+        port = int(config['InfluxDB']['port'])
+        database = config['InfluxDB']['database']
+        username = config['InfluxDB']['username']
+        password = config['InfluxDB']['password']
+        client = influxDB.connect_to_server(host, port, username, password)
+        client = influxDB.connect_to_database(client, database)
+
+    else:
+        info('InfluxDB not configured!')
+        client = None
+
+
     parser = get_parser()
     args = parser.parse_args(args)
-
+    print(args)
     if args.find_action:
         find_ruuvitags(config)
+    if not args.scan_time == None:
+        read_data_from_ruuvitags(config, args.scan_time, client)
+    if args.config_edit_action:
+        subprocess.call(['nano', config_file])
     else:
         parser.print_usage()
 if __name__ == '__main__':
