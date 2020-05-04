@@ -68,7 +68,7 @@ def write_ruuvidata_to_influxdb(client, received_data):
             'fields': fields
         }
     ]
-    print(json_body)
+    debug(json_body)
     client.write_points(json_body)
 
 if __name__ == '__main__':

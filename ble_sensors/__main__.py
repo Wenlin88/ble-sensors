@@ -64,19 +64,22 @@ def find_ruuvitags(config):
         ans = input("Add new tags to config? (y/n): ")
         if ans == 'y':
             ble_sensor_config.add_new_ruuvitag_to_config_file(new_macs)
-def read_data_from_ruuvitags(config, timeout = 2, influxDB_client = None):
+def read_data_from_ruuvitags(timeout = 2, influxDB_client = None):
     tag_list = ble_sensor_config.read_known_ruuvitags()
     known_macs = [tag_list[tag]['mac'] for tag in tag_list]
-    data_array = ruuvitag.get_data(timeout = timeout, ruuvitags = known_macs)
-    if len(data_array) > 0:
-        for mac in data_array:
+    raw_data = ruuvitag.get_data(timeout = timeout, ruuvitags = known_macs)
+    if len(raw_data) > 0:
+        for mac in raw_data:
             tag = [tag for tag in tag_list if tag_list[tag]['mac'] == mac]
             data = [mac]
-            data.append(data_array[mac])
+            data.append(raw_data[mac])
             if tag:
                 data.append(tag[0][:])
             else:
                 warning('Unknown tag: {}'.format(mac))
+                data.append(None)
+
+            info('{}: {:4.1f}C° {:3.1f}RH% {:5.1f}hPa {:4.3f}V'.format(data[-1],data[1]['temperature'],data[1]['humidity'],data[1]['pressure'],data[1]['battery']/1000))
             if not influxDB_client == None:
                 influxDB.write_ruuvidata_to_influxdb(influxDB_client,data)
     else:
@@ -97,21 +100,20 @@ def main(args = None):
         database = config['InfluxDB']['database']
         username = config['InfluxDB']['username']
         password = config['InfluxDB']['password']
-        client = influxDB.connect_to_server(host, port, username, password)
-        client = influxDB.connect_to_database(client, database)
+        influxDB_client = influxDB.connect_to_server(host, port, username, password)
+        influxDB_client = influxDB.connect_to_database(influxDB_client, database)
 
     else:
         info('InfluxDB not configured!')
-        client = None
+        influxDB_client = None
 
 
     parser = get_parser()
     args = parser.parse_args(args)
-    print(args)
     if args.find_action:
         find_ruuvitags(config)
     if not args.scan_time == None:
-        read_data_from_ruuvitags(config, args.scan_time, client)
+        read_data_from_ruuvitags(timeout = args.scan_time,  influxDB_client = influxDB_client)
     if args.config_edit_action:
         subprocess.call(['nano', config_file])
     else:
