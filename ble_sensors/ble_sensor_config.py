@@ -4,7 +4,7 @@ import logging
 from ble_sensors import wenlins_logger
 import configparser
 
-config_file = "ble-sensors.config"
+config_file = os.path.expanduser('~/ble-sensors.config')
 
 # Init logger
 logger =  wenlins_logger.loggerClass(name = 'config', file_logging = False, logging_level = 'debug')

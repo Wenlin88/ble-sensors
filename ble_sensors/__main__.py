@@ -1,3 +1,4 @@
+#/usr/bin/python3
 import sys
 import argparse
 import pkg_resources  # part of setuptools
@@ -5,9 +6,11 @@ from ble_sensors import ble_sensor_config, wenlins_logger, ruuvitag, influxDB
 import importlib
 import configparser
 import subprocess
+from crontab import CronTab
+import os
 
 
-config_file = "ble-sensors.config"
+config_file = os.path.expanduser('~/ble-sensors.config')
 
 # Init logger
 logger =  wenlins_logger.loggerClass(name = 'main', file_logging = False, logging_level = 'debug')
@@ -21,7 +24,7 @@ exception = logger.exception
 
 def get_parser():
     """
-    Creates a new argument parser.
+    Creates a argument parser.
     """
     version = pkg_resources.require("ble_sensors")[0].version
     formatter = lambda prog: argparse.HelpFormatter(prog,max_help_position=62,width = 115)
@@ -31,7 +34,8 @@ def get_parser():
     parser.add_argument('-f', '--find_tags', dest = 'find_action', help='Find broadcasting RuuviTags', action = 'store_true')
     parser.add_argument('-r', '--run_tag_scan', dest = 'scan_time', help='Scan data from known RuuviTags.', nargs='?', const=2, type=int)
     parser.add_argument('-e', '--edit_config', dest = 'config_edit_action', help='Edit config file with Nano editor', action = 'store_true')
-    parser.add_argument('-c', '--continous_scan', default=[60,3], nargs='*', metavar=('interval', 'scan_time'),type=int, help='Continous RuuviTag scanning and reading. Input arguments are measurement interval (default: 60s) and scan time for tag broadcasts (default: 3s)')
+    parser.add_argument('-a', '--add_to_crontab', dest = 'add_to_crontab', help='Add ble-sensor scanning to crontab process', action = 'store_true')
+    parser.add_argument('-d', '--delete_from_crontab', dest = 'remove_from_crontab', help='Delete ble-sensor scanning from crontab', action = 'store_true')
     return parser
 def find_ruuvitags(config):
     number_of_known_ruuvitags = int(config['Ruuvitag general']['known ruuvitags'])
@@ -85,9 +89,9 @@ def read_data_from_ruuvitags(timeout = 2, influxDB_client = None):
     else:
         warning('No data resieved from ruuvitags!')
 def main(args = None):
-    print('\n----------------------------------------------- ')
-    print('-------- Welcome to ble_sensors CLI UI -------- ')
-    print('----------------------------------------------- \n')
+    print('\n--------------------------------------------- ')
+    print('--------  ble_sensors version: {:} -------- '.format(pkg_resources.require("ble_sensors")[0].version))
+    print('--------------------------------------------- \n')
 
     # Check that config file exists
     # ble_sensor_config.create_config_file()
@@ -112,11 +116,40 @@ def main(args = None):
     args = parser.parse_args(args)
     if args.find_action:
         find_ruuvitags(config)
-    if not args.scan_time == None:
+    elif not args.scan_time == None:
         read_data_from_ruuvitags(timeout = args.scan_time,  influxDB_client = influxDB_client)
-    if args.config_edit_action:
+    elif args.config_edit_action:
         subprocess.call(['nano', config_file])
+    elif args.add_to_crontab:
+            info('Writing ble-sensor scanning job to crontab')
+            cron = CronTab(user='pi')
+            iter = cron.find_comment('Scanning job for ble-sensors')
+            jobs = [i for i in iter]
+            if len(jobs) > 0:
+                warning('ble-sensor scanning job already found from crontab')
+            else:
+                job = cron.new(command='/usr/bin/python3 -m ble_sensors -r 10', comment='Scanning job for ble-sensors')
+                job.minute.every(1)
+                cron.write()
+                info('Job written successfully to crontab!')
+    elif args.remove_from_crontab:
+        info('Trying to delete ble-sensor scanning job from crontab')
+        cron = CronTab(user='pi')
+        iter = cron.find_comment('Scanning job for ble-sensors')
+        jobs = [i for i in iter]
+        if len(jobs) > 0:
+            for job in jobs:
+                temp = job.comment
+                cron.remove(job)
+                cron.write()
+                info('{} removed from crontab'.format(temp))
+        else:
+            warning('ble-sensor scanning job not found from crontab!')
     else:
         parser.print_usage()
+    print('\n---------------------------------------------\n')
 if __name__ == '__main__':
     main()
+    # cron = CronTab(user='pi')
+    # for job in cron:
+    #     print(job)
