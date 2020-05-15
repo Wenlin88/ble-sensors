@@ -39,7 +39,7 @@ def get_parser():
     return parser
 def find_ruuvitags(config):
     number_of_known_ruuvitags = int(config['Ruuvitag general']['known ruuvitags'])
-    info('Already know RuuviTags found from config: ' + str(number_of_known_ruuvitags))
+    info('Already known RuuviTags found from config: ' + str(number_of_known_ruuvitags))
     try:
         listening_time = int(input('\n\nGive the desired listening time in seconds: '))
     except ValueError:
@@ -50,7 +50,7 @@ def find_ruuvitags(config):
     data = ruuvitag.get_data(timeout = listening_time)
 
     nro_new_tags = len(data) - number_of_known_ruuvitags
-    info('Data recieved from ' + str(len(data)) + ' ruuvitag(s)!')
+    info('Data received from ' + str(len(data)) + ' ruuvitag(s)!')
 
     tag_list = ble_sensor_config.read_known_ruuvitags()
     known_macs = [tag_list[tag]['mac'] for tag in tag_list]
