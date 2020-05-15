@@ -16,7 +16,7 @@ from ble_sensors import ble_sensor_config, wenlins_logger, ruuvitag, influxDB
 
 
 # Init logger
-logger =  wenlins_logger.loggerClass(name = 'main', file_logging = False, logging_level = 'debug')
+logger =  wenlins_logger.loggerClass(name = 'ruuvitag', file_logging = False, logging_level = 'debug')
 debug = logger.debug
 info = logger.info
 warning = logger.warning
