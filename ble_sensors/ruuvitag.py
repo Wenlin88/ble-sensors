@@ -12,6 +12,17 @@ from influxdb import InfluxDBClient
 import os
 
 
+from ble_sensors import ble_sensor_config, wenlins_logger, ruuvitag, influxDB
+
+
+# Init logger
+logger =  wenlins_logger.loggerClass(name = 'main', file_logging = False, logging_level = 'debug')
+debug = logger.debug
+info = logger.info
+warning = logger.warning
+error = logger.error
+critical = logger.critical
+exception = logger.exception
 
 
 
@@ -23,7 +34,10 @@ def find_ruuvitags():
     RuuviTagSensor.find_ruuvitags()
 def get_data(ruuvitags = '', timeout = 5):
     # Tällä funktiolla voi hakea useammasta ruuvitagista datan samalla kertaa
+    debug('Reading data from RuuviTags for {:}s'.format(timeout))
     data = RuuviTagSensor.get_data_for_sensors(ruuvitags, timeout)
+    debug('Recieved data:')
+    debug(data)
     return data
 def fetch_data_and_send(listening_time = 10):
     print('Fetching data...')
