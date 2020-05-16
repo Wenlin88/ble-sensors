@@ -16,7 +16,7 @@ from ble_sensors import ble_sensor_config, wenlins_logger, ruuvitag, influxDB
 
 
 # Init logger
-logger =  wenlins_logger.loggerClass(name = 'ruuvitag', file_logging = False, logging_level = 'debug')
+logger =  wenlins_logger.loggerClass(name = 'ruuvitag', file_logging = False, logging_level = 'info')
 debug = logger.debug
 info = logger.info
 warning = logger.warning
@@ -34,7 +34,7 @@ def find_ruuvitags():
     RuuviTagSensor.find_ruuvitags()
 def get_data(ruuvitags = '', timeout = 5):
     # Tällä funktiolla voi hakea useammasta ruuvitagista datan samalla kertaa
-    debug('Listening data from RuuviTags for {:}s'.format(timeout))
+    info('Listening data from RuuviTags for {:}s'.format(timeout))
     data = RuuviTagSensor.get_data_for_sensors(ruuvitags, timeout)
     debug('Received data:')
     debug(data)

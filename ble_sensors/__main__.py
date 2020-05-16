@@ -36,17 +36,17 @@ def get_parser():
     parser.add_argument('-e', '--edit_config', dest = 'config_edit_action', help='Edit config file with Nano editor', action = 'store_true')
     parser.add_argument('-a', '--add_to_crontab', dest = 'add_to_crontab', help='Add ble-sensor scanning to crontab process', action = 'store_true')
     parser.add_argument('-d', '--delete_from_crontab', dest = 'remove_from_crontab', help='Delete ble-sensor scanning from crontab', action = 'store_true')
+    parser.add_argument('-i', '--install', dest = 'install_action', help='Install ble_sensors utilities', action = 'store_true')
     return parser
 def find_ruuvitags(config):
     number_of_known_ruuvitags = int(config['Ruuvitag general']['known ruuvitags'])
     info('Already known RuuviTags found from config: ' + str(number_of_known_ruuvitags))
     try:
-        listening_time = int(input('\n\nGive the desired listening time in seconds: '))
+        listening_time = int(input('\nGive the desired listening time in seconds: '))
     except ValueError:
         error('Give number value!')
         return False
-    print('\n')
-    info('Listening ruuvitag broadcasts for '+ str(listening_time) + 's...')
+    print()
     data = ruuvitag.get_data(timeout = listening_time)
 
     nro_new_tags = len(data) - number_of_known_ruuvitags
@@ -65,8 +65,7 @@ def find_ruuvitags(config):
     info(str(len(new_macs)) + ' new ruuvitags found!')
 
     if len(new_macs) > 0:
-        ans = input("Add new tags to config? (y/n): ")
-        if ans == 'y':
+        if query_yes_no("Add new tags to config?"):
             ble_sensor_config.add_new_ruuvitag_to_config_file(new_macs)
 def read_data_from_ruuvitags(timeout = 2, influxDB_client = None):
     tag_list = ble_sensor_config.read_known_ruuvitags()
@@ -89,6 +88,37 @@ def read_data_from_ruuvitags(timeout = 2, influxDB_client = None):
                 influxDB.write_ruuvidata_to_influxdb(influxDB_client,data)
     else:
         warning('No data resieved from ruuvitags!')
+def query_yes_no(question, default="no"):
+    """Ask a yes/no question via raw_input() and return their answer.
+
+    "question" is a string that is presented to the user.
+    "default" is the presumed answer if the user just hits <Enter>.
+        It must be "yes" (the default), "no" or None (meaning
+        an answer is required of the user).
+
+    The "answer" return value is True for "yes" or False for "no".
+    """
+    valid = {"yes": True, "y": True, "ye": True,
+             "no": False, "n": False}
+    if default is None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
+
+    while True:
+        sys.stdout.write(question + prompt)
+        choice = input().lower()
+        if default is not None and choice == '':
+            return valid[default]
+        elif choice in valid:
+            return valid[choice]
+        else:
+            sys.stdout.write("Please respond with 'yes' or 'no' "
+                             "(or 'y' or 'n').\n")
 def main(args = None):
     print('\n--------------------------------------------- ')
     print('--------  ble_sensors version: {:} -------- '.format(pkg_resources.require("ble_sensors")[0].version))
@@ -146,11 +176,33 @@ def main(args = None):
                 info('{} removed from crontab'.format(temp))
         else:
             warning('ble-sensor scanning job not found from crontab!')
+    elif args.install_action:
+        info('Installing Bluez protocol stack...\n')
+        subprocess.call(['sudo', 'apt-get', 'install' ,'bluez' ,'bluez-hcidump'])
+        print()
+        info('Bluez protocol stack installed!')
+        print()
+        if query_yes_no('Do you want to search for new sensors?'):
+            print()
+            find_ruuvitags(config)
+        if query_yes_no('Do you want to edit / set InfluxDB parameters?'):
+            print()
+            temp = input('Enable InfluxDB reporting: ')
+            config.set('InfluxDB','enabled',temp)
+            temp = input('Address: ')
+            config.set('InfluxDB','address',temp)
+            temp = input('Port: ')
+            config.set('InfluxDB','port',temp)
+            temp = input('Database: ')
+            config.set('InfluxDB','database',temp)
+            temp = input('Username: ')
+            config.set('InfluxDB','username',temp)
+            temp = input('Password: ')
+            config.set('InfluxDB','password',temp)
+            with open(config_file, 'w') as configfile:
+                config.write(configfile)
     else:
         parser.print_usage()
     print('\n---------------------------------------------\n')
 if __name__ == '__main__':
     main()
-    # cron = CronTab(user='pi')
-    # for job in cron:
-    #     print(job)
