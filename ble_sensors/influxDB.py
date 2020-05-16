@@ -1,6 +1,8 @@
 #Tähän fileen teen kaikki indluxDB funktiot
+import influxdb
 from influxdb import InfluxDBClient
 from ble_sensors import wenlins_logger
+import sys
 
 # Init logger
 logger =  wenlins_logger.loggerClass(name = 'influxDB', file_logging = False, logging_level = 'info')
@@ -18,21 +20,32 @@ def connect_to_server(host, port, username, password):
     return client
 def connect_to_database(client, database):
     db_list = list_databases(client)
-    db_list = [db['name'] for db in db_list]
-    if database in db_list:
-        client.switch_database(database)
-        info('Database found! Client connected to database.')
+    if not db_list == False:
+        db_list = [db['name'] for db in db_list]
+        if database in db_list:
+            client.switch_database(database)
+            info('Database found! Client connected to database.')
+        else:
+            info('{} not found from server. New database created!'.format(database))
+            client.create_database(database)
+            client.switch_database(database)
+        return client
     else:
-        info('{} not found from server. New database created!'.format(database))
-        client.create_database(database)
-        client.switch_database(database)
-    return client
+        return False
 def list_databases(client):
-     db_list = client.get_list_database()
-     debug('Databases found from connected server:')
-     for i, db in enumerate(db_list):
-         debug('{} - {}'.format(i,db['name']))
-     return db_list
+    try:
+        db_list = client.get_list_database()
+    except influxdb.exceptions.InfluxDBClientError:
+        type, value, traceback = sys.exc_info()
+        if value.code == 401:
+            error('InfluxDB database authorization failed! Check your password')
+        else:
+            error('Non handled InluxDB error: {:}'.format(value))
+        return False
+    debug('Databases found from connected server:')
+    for i, db in enumerate(db_list):
+     debug('{} - {}'.format(i,db['name']))
+    return db_list
 def write_ruuvidata_to_influxdb(client, received_data):
     """
     Convert data into RuuviCollector naming schme and scale

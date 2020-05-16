@@ -78,7 +78,8 @@ def read_data_from_ruuvitags(timeout = 2, influxDB_client = None):
             data = [mac]
             data.append(raw_data[mac])
             if tag:
-                data.append(tag[0][:])
+                tag = tag[0][:]
+                data.append(tag_list[tag]['name'])
             else:
                 warning('Unknown tag: {}'.format(mac))
                 data.append(None)
