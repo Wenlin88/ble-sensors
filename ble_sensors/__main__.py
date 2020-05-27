@@ -8,6 +8,7 @@ import configparser
 import subprocess
 from crontab import CronTab
 import os
+from influxdb import InfluxDBClient
 
 
 config_file = os.path.expanduser('~/ble-sensors.config')
@@ -177,14 +178,48 @@ def main(args = None):
         else:
             warning('ble-sensor scanning job not found from crontab!')
     elif args.install_action:
-        info('Installing Bluez protocol stack...\n')
-        subprocess.call(['sudo', 'apt-get', 'install' ,'bluez' ,'bluez-hcidump'])
-        print()
-        info('Bluez protocol stack installed!')
-        print()
+        if query_yes_no('Do you want to install Bluez protocol stack?'):
+            info('Installing Bluez protocol stack...\n')
+            subprocess.call(['sudo', 'apt-get', 'install' ,'bluez' ,'bluez-hcidump'])
+            print()
+            info('Bluez protocol stack installed!')
+            print()
         if query_yes_no('Do you want to search for new sensors?'):
             print()
             find_ruuvitags(config)
+        if query_yes_no('Do you want to install inluxDB server to this device?'):
+            info('Installing inluxDB server...\n')
+            command = 'wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add - source /etc/os-release'.split(' ')
+            subprocess.call(command)
+            command = 'test $VERSION_ID = "7"'.split(' ')
+            subprocess.call(command)
+            command = 'echo "deb https://repos.influxdata.com/debian wheezy stable" | sudo tee /etc/apt/sources.list.d/influxdb.list'.split(' ')
+            subprocess.call(command)
+            command = 'test $VERSION_ID = "8"'.split(' ')
+            subprocess.call(command)
+            command = 'echo "deb https://repos.influxdata.com/debian jessie stable" | sudo tee /etc/apt/sources.list.d/influxdb.list'.split(' ')
+            subprocess.call(command)
+            command = 'test $VERSION_ID = "9"'.split(' ')
+            subprocess.call(command)
+            command = 'echo "deb https://repos.influxdata.com/debian stretch stable" | sudo tee /etc/apt/sources.list.d/influxdb.list'.split(' ')
+            subprocess.call(command)
+            command = 'sudo apt-get update'.split(' ')
+            subprocess.call(command)
+            command = 'sudo apt-get install influxdb'.split(' ')
+            subprocess.call(command)
+            command = 'sudo systemctl unmask influxdb.service'.split(' ')
+            subprocess.call(command)
+            command = 'sudo systemctl start influxdb'.split(' ')
+            subprocess.call(command)
+            command = 'sudo systemctl enable influxdb.service'.split(' ')
+            subprocess.call(command)
+            command = 'sudo apt install influxdb-client'.split(' ')
+            subprocess.call(command)
+            print()
+            info('inluxDB installed!!')
+            print()
+            client = InfluxDBClient(host='localhost', port=8086)
+            print(client)
         if query_yes_no('Do you want to edit / set InfluxDB parameters?'):
             print()
             temp = input('Enable InfluxDB reporting: ')

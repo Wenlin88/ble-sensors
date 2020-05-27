@@ -7,7 +7,7 @@
 from setuptools import setup, find_packages
 
 setup(name='ble_sensors',
-      version='0.2.0',
+      version='0.3.0dev',
       description='Python module to read all sorts of BLE sensors with Raspberry Pi',
       url='https://github.com/Wenlin88/Pi_BLE_Reader',
       author='Wenlin88',
