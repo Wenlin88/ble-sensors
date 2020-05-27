@@ -6,5 +6,14 @@ Download the package as a zip or if you are using git. git clone https://github.
 ## Instal python package
 
 ```sh
-pip install git+https://github.com/Wenlin88/ble-sensors
+pip3 install git+https://github.com/Wenlin88/ble-sensors
+```
+Help how to use module can be found with command
+```sh
+python3 -m ble_sensors -h
+```
+
+Find ruuvitags with command
+```sh
+python3 -m ble_sensors -f 5
 ```
