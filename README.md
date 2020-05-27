@@ -12,3 +12,8 @@ Help how to use module can be found with command
 ```sh
 python3 -m ble_sensors -h
 ```
+
+Find ruuvitags with command
+```sh
+python3 -m ble_sensors -f 5
+```
