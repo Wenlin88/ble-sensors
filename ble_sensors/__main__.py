@@ -9,6 +9,9 @@ import subprocess
 from crontab import CronTab
 import os
 from influxdb import InfluxDBClient
+import secrets
+import string
+
 
 
 config_file = os.path.expanduser('~/ble-sensors.config')
@@ -80,11 +83,14 @@ def read_data_from_ruuvitags(timeout = 2, influxDB_client = None):
             if tag:
                 tag = tag[0][:]
                 data.append(tag_list[tag]['name'])
+                data[1]['temperature'] = data[1]['temperature'] + float(tag_list[tag]['T_cal_value'])*-1
+                data[1]['humidity'] = data[1]['humidity'] + float(tag_list[tag]['RH_cal_value'])*-1
+                data[1]['pressure'] = data[1]['pressure'] + float(tag_list[tag]['P_cal_value'])*-1
             else:
                 warning('Unknown tag: {}'.format(mac))
                 data.append(None)
 
-            info('{}: {:4.1f}C° {:3.1f}RH% {:5.1f}hPa {:4.3f}V'.format(data[-1],data[1]['temperature'],data[1]['humidity'],data[1]['pressure'],data[1]['battery']/1000))
+            info('{:21s}: {:4.1f}C° {:3.1f}RH% {:5.1f}hPa {:4.3f}V'.format(data[-1],data[1]['temperature'],data[1]['humidity'],data[1]['pressure'],data[1]['battery']/1000))
             if not influxDB_client == None:
                 influxDB.write_ruuvidata_to_influxdb(influxDB_client,data)
     else:
@@ -132,12 +138,16 @@ def main(args = None):
     if config['InfluxDB'].getboolean('enabled') == True:
         info('InfluxDB enabled!')
         host = config['InfluxDB']['address']
-        port = int(config['InfluxDB']['port'])
-        database = config['InfluxDB']['database']
-        username = config['InfluxDB']['username']
-        password = config['InfluxDB']['password']
-        influxDB_client = influxDB.connect_to_server(host, port, username, password)
-        influxDB_client = influxDB.connect_to_database(influxDB_client, database)
+        try:
+            port = int(config['InfluxDB']['port'])
+            database = config['InfluxDB']['database']
+            username = config['InfluxDB']['username']
+            password = config['InfluxDB']['password']
+            influxDB_client = influxDB.connect_to_server(host, port, username, password)
+            influxDB_client = influxDB.connect_to_database(influxDB_client, database)
+        except ValueError:
+            error('Not valid InfluxDB port at influxDB config')
+            influxDB_client = None
 
     else:
         info('InfluxDB not configured!')
@@ -215,10 +225,32 @@ def main(args = None):
             subprocess.call(command)
             command = 'sudo apt install influxdb-client'.split(' ')
             subprocess.call(command)
+
+            # Generate password
+            dbname = 'measurements'
+            user = 'home'
+            alphabet = string.ascii_letters + string.digits
+            password = ''.join(secrets.choice(alphabet) for i in range(20))
+
+            client = InfluxDBClient(host='localhost', port=8086)
+            client.create_database(dbname)
+            client.switch_database(database)
+            client.ping()
+            client.create_user(user, password, admin=True)
+
+            config.set('InfluxDB','enabled','True')
+            config.set('InfluxDB','address','localhost')
+            config.set('InfluxDB','port',str(8086))
+            config.set('InfluxDB','database',dbname)
+            config.set('InfluxDB','username',user)
+            config.set('InfluxDB','password',password)
+            with open(config_file, 'w') as configfile:
+                config.write(configfile)
+
             print()
             info('inluxDB installed!!')
             print()
-            client = InfluxDBClient(host='localhost', port=8086)
+
             print(client)
         if query_yes_no('Do you want to edit / set InfluxDB parameters?'):
             print()

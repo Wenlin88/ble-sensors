@@ -82,7 +82,7 @@ def read_known_ruuvitags():
         'name': config[tag_string]['name'],
         'T_cal_value': config[tag_string]['temperature calibration value'],
         'RH_cal_value': config[tag_string]['humidity calibration value'],
-        'P_cal_calue': config[tag_string]['pressure calibration value']}})
+        'P_cal_value': config[tag_string]['pressure calibration value']}})
     return tags
 if __name__ == '__main__':
     create_config_file()

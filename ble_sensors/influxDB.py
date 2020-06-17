@@ -70,14 +70,11 @@ def write_ruuvidata_to_influxdb(client, received_data):
     fields['measurementSequenceNumber'] = payload['measurement_sequence_number'] if ('measurement_sequence_number' in payload) else None
     fields['tagID']                     = payload['tagID'] if ('tagID' in payload) else None
     fields['rssi']                      = payload['rssi'] if ('rssi' in payload) else None
+    fields['dataFormat']                = payload['data_format'] if ('data_format' in payload) else None
+    fields['mac']                       = mac
     json_body = [
         {
-            'measurement': 'ruuvi_measurements',
-            'tags': {
-                'mac': mac,
-                'dataFormat': dataFormat,
-                'tagName': tag_name
-            },
+            'measurement': tag_name,
             'fields': fields
         }
     ]
